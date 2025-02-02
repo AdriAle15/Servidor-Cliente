@@ -1,0 +1,15 @@
+menu "WebSocket Configuration"
+    config ESP_WIFI_STATIC_RX_BUFFER_NUM
+        int "WiFi static RX buffer number"
+        default 10
+        
+    config LOG_MAXIMUM_LEVEL
+        int "Maximum log verbosity"
+        default 3
+        range 0 5
+        
+    config FREERTOS_HZ
+        int "FreeRTOS tick rate (Hz)"
+        default 100
+        range 1 1000
+endmenu 
