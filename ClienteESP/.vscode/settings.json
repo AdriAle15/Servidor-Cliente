@@ -1,6 +1,6 @@
 {
     "C_Cpp.intelliSenseEngine": "default",
-    "idf.espIdfPathWin": "C:\\Users\\A\\esp\\v5.4\\esp-idf",
+    "idf.espIdfPathWin": "C:\\Users\\NO\\esp\\v5.4\\esp-idf",
     "idf.openOcdConfigs": [
         "board/esp32-wrover-kit-3.3v.cfg"
     ],

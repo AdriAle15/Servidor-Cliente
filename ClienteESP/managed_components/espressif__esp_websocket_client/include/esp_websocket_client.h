@@ -7,29 +7,19 @@
 #ifndef _ESP_WEBSOCKET_CLIENT_H_
 #define _ESP_WEBSOCKET_CLIENT_H_
 
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "esp_err.h"
 #include "esp_event.h"
-#include "esp_transport.h"
-#include "esp_transport_tcp.h"
-#include "esp_transport_ssl.h"
+#include <sys/socket.h>
+#include "esp_transport_ws.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// Definición de códigos de operación WebSocket
-typedef enum {
-    WS_TRANSPORT_OPCODES_CONT  = 0x00,
-    WS_TRANSPORT_OPCODES_TEXT  = 0x01,
-    WS_TRANSPORT_OPCODES_BIN   = 0x02,
-    WS_TRANSPORT_OPCODES_CLOSE = 0x08,
-    WS_TRANSPORT_OPCODES_PING  = 0x09,
-    WS_TRANSPORT_OPCODES_PONG  = 0x0a
-} ws_transport_opcodes_t;
 
 typedef struct esp_websocket_client *esp_websocket_client_handle_t;
 
@@ -44,6 +34,10 @@ typedef enum {
     WEBSOCKET_EVENT_CONNECTED,      /*!< Once the Websocket has been connected to the server, no data exchange has been performed */
     WEBSOCKET_EVENT_DISCONNECTED,   /*!< The connection has been disconnected */
     WEBSOCKET_EVENT_DATA,           /*!< When receiving data from the server, possibly multiple portions of the packet */
+    WEBSOCKET_EVENT_CLOSED,         /*!< The connection has been closed cleanly */
+    WEBSOCKET_EVENT_BEFORE_CONNECT, /*!< The event occurs before connecting */
+    WEBSOCKET_EVENT_BEGIN,          /*!< The event occurs once after thread creation, before event loop */
+    WEBSOCKET_EVENT_FINISH,         /*!< The event occurs once after event loop, before thread destruction */
     WEBSOCKET_EVENT_MAX
 } esp_websocket_event_id_t;
 
@@ -76,12 +70,15 @@ typedef struct {
  * @brief Websocket event data
  */
 typedef struct {
-    esp_websocket_client_handle_t client;
-    void *data_ptr;
-    int data_len;
-    uint8_t op_code;
-    esp_websocket_event_id_t event_id;
-    void *user_context;
+    const char *data_ptr;                   /*!< Data pointer */
+    int data_len;                           /*!< Data length */
+    bool fin;                               /*!< Fin flag */
+    uint8_t op_code;                        /*!< Received opcode */
+    esp_websocket_client_handle_t client;   /*!< esp_websocket_client_handle_t context */
+    void *user_context;                     /*!< user_data context, from esp_websocket_client_config_t user_data */
+    int payload_len;                        /*!< Total payload length, payloads exceeding buffer will be posted through multiple events */
+    int payload_offset;                     /*!< Actual offset for the data associated with this event */
+    esp_websocket_error_codes_t error_handle; /*!< esp-websocket error handle including esp-tls errors as well as internal websocket errors */
 } esp_websocket_event_data_t;
 
 /**
@@ -111,10 +108,13 @@ typedef struct {
     int                         buffer_size;                /*!< Websocket buffer size */
     const char                  *cert_pem;                  /*!< Pointer to certificate data in PEM or DER format for server verify (with SSL), default is NULL, not required to verify the server. PEM-format must have a terminating NULL-character. DER-format requires the length to be passed in cert_len. */
     size_t                      cert_len;                   /*!< Length of the buffer pointed to by cert_pem. May be 0 for null-terminated pem */
-    const char                  *client_cert;               /*!< Pointer to certificate data in PEM or DER format for SSL mutual authentication, default is NULL, not required if mutual authentication is not needed. If it is not NULL, also `client_key` has to be provided. PEM-format must have a terminating NULL-character. DER-format requires the length to be passed in client_cert_len. */
+    const char                  *client_cert;               /*!< Pointer to certificate data in PEM or DER format for SSL mutual authentication, default is NULL, not required if mutual authentication is not needed. If it is not NULL, also `client_key` or `client_ds_data` (if supported) has to be provided. PEM-format must have a terminating NULL-character. DER-format requires the length to be passed in client_cert_len. */
     size_t                      client_cert_len;            /*!< Length of the buffer pointed to by client_cert. May be 0 for null-terminated pem */
-    const char                  *client_key;                /*!< Pointer to private key data in PEM or DER format for SSL mutual authentication, default is NULL, not required if mutual authentication is not needed. If it is not NULL, also `client_cert` has to be provided. PEM-format must have a terminating NULL-character. DER-format requires the length to be passed in client_key_len */
+    const char                  *client_key;                /*!< Pointer to private key data in PEM or DER format for SSL mutual authentication, default is NULL, not required if mutual authentication is not needed. If it is not NULL, also `client_cert` has to be provided and `client_ds_data` (if supported) gets ignored. PEM-format must have a terminating NULL-character. DER-format requires the length to be passed in client_key_len */
     size_t                      client_key_len;             /*!< Length of the buffer pointed to by client_key_pem. May be 0 for null-terminated pem */
+#if CONFIG_ESP_TLS_USE_DS_PERIPHERAL
+    void                        *client_ds_data;            /*!< Pointer to the encrypted private key data for SSL mutual authentication using the DS peripheral, default is NULL, not required if mutual authentication is not needed. If it is not NULL, also `client_cert` has to be provided. It is ignored if `client_key` is provided */
+#endif
     esp_websocket_transport_t   transport;                  /*!< Websocket transport type, see `esp_websocket_transport_t */
     const char                  *subprotocol;               /*!< Websocket subprotocol */
     const char                  *user_agent;                /*!< Websocket user-agent */

@@ -148,65 +148,11 @@ function App() {
               Error: {error}
             </div>
           )}
-          {serverInfo?.availableIPs && serverInfo.availableIPs.length > 0 && (
-            <div className="mt-4 bg-blue-700 p-4 rounded-lg">
-              <p className="font-semibold text-lg mb-2">IPs Disponibles:</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {serverInfo.availableIPs.map((ip, index) => (
-                  <div key={index} className="bg-blue-800 p-2 rounded">
-                    <p className="font-medium">{ip.name}</p>
-                    <code className="bg-blue-900 px-2 py-1 rounded text-sm">
-                      {ip.ip}
-                    </code>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Panel de Control IoT</h1>
           <p className="text-gray-600">Gestiona tus dispositivos conectados</p>
-          
-          {/* Información detallada del Servidor */}
-          {serverInfo && (
-            <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">Información del Servidor</h2>
-              <div className="space-y-3">
-                <p className="flex items-center justify-between">
-                  <span className="font-medium">IP WiFi:</span>
-                  <code className="bg-gray-100 px-2 py-1 rounded">{serverInfo.ip}</code>
-                </p>
-                <p className="flex items-center justify-between">
-                  <span className="font-medium">Puerto HTTP:</span>
-                  <code className="bg-gray-100 px-2 py-1 rounded">{serverInfo.httpPort}</code>
-                </p>
-                <p className="flex items-center justify-between">
-                  <span className="font-medium">Puerto WebSocket:</span>
-                  <code className="bg-gray-100 px-2 py-1 rounded">{serverInfo.wsPort}</code>
-                </p>
-                <p className="flex items-center justify-between">
-                  <span className="font-medium">URL WebSocket:</span>
-                  <code className="bg-gray-100 px-2 py-1 rounded">{serverInfo.wsUrl}</code>
-                </p>
-                <div className="border-t pt-3">
-                  <p className="font-medium mb-2">Conexiones disponibles:</p>
-                  <div className="space-y-2">
-                    {serverInfo.availableIPs.map((ip, index) => (
-                      <div key={index} className="flex justify-between items-center bg-gray-50 p-2 rounded">
-                        <span className="text-gray-600">{ip.name}:</span>
-                        <div className="space-y-1">
-                          <code className="bg-gray-100 px-2 py-1 rounded block">{ip.ip}</code>
-                          <code className="bg-gray-100 px-2 py-1 rounded block">{ip.wsUrl}</code>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {devices.length === 0 ? (

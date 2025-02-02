@@ -1,15 +1,5 @@
 idf_component_register(
-    SRCS "main.cpp"
+    SRCS "tcp_client_main.c"
     INCLUDE_DIRS "."
-    REQUIRES esp_wifi
-            nvs_flash
-            driver
-            cJSON
-            mbedtls
-            esp_websocket_client
-)
-
-set_source_files_properties(main.cpp 
-    PROPERTIES 
-    COMPILE_FLAGS "-x c++"
+    REQUIRES esp_websocket_client nvs_flash protocol_examples_common esp_wifi driver json
 )
